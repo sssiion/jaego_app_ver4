@@ -1,5 +1,5 @@
 // apiClient.js
-const API_BASE = 'http://jaegoserverver1-production.up.railway.app:8080/api';
+const API_BASE = 'https://jaegoserverver1-production.up.railway.app/api';
 
 
 
