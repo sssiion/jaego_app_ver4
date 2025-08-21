@@ -12,10 +12,10 @@ export default function MyPager({navigation}) {
   return (
     <PagerView style={styles.pagerView} initialPage={0}>
       <View key="1" style={styles.page}>
-        <CategoryExpiryScreen navigation={navigation}  />
+        <CategoryConsumeScreen navigation={navigation} type={String("소비")}  />
       </View>
       <View key="2" style={styles.page}>
-        <CategoryConsumeScreen navigation={navigation} />
+        <CategoryConsumeScreen navigation={navigation} type={String("유통")} />
       </View>
       <View key="3" style={styles.page}>
         <UrgentProductsScreen navigation={navigation}/>

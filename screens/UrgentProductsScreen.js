@@ -1,20 +1,36 @@
 // screens/UrgentProductsScreen.js
-import React, {  useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, Button } from 'react-native';
+import React, {  useState,useEffect  } from 'react';
+import { View, Text, TextInput, FlatList, StyleSheet, Button, TouchableOpacity } from 'react-native';
 import RemainingTime from './RemainingTime.js';
 import { getUrgent } from '../routes/apiClient.js';
 
 
 
-export default function UrgentProductsScreen() {
+export default function UrgentProductsScreen({navigation}) {
   const[products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
-
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [days, setDays] = useState('7');
 
   const fetchUrgent = () => {
-    getUrgent(Number(days)).then(setProducts).catch(console.error);
+    getUrgent(Number(days))
+      .then(data => {
+        setProducts(data);
+        setFilteredProducts(data);
+      })
+      .catch(console.error);
   };
+  // 검색어가 바뀔 때 필터링
+    useEffect(() => {
+      if (!search) {
+        setFilteredProducts(products);
+      } else {
+        const filtered = products.filter(item =>
+          item.inventoryName.toLowerCase().includes(search.toLowerCase())
+        );
+        setFilteredProducts(filtered);
+      }
+    }, [search, products]);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>임박 상품 모음</Text>
@@ -35,15 +51,19 @@ export default function UrgentProductsScreen() {
       {/* 검색 버튼 */}
       <Button title="검색" onPress={fetchUrgent} />
       <FlatList
-        data={products}
+        data={filteredProducts}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
+
           <View style={styles.itemRow}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ProductDetail", { product: item })}>
             <Text style={styles.itemName}>{item.inventoryName}</Text>
             <Text style={styles.itemDetail}>
               남은 수량: {item.quantity != null ? item.quantity.toString() : '-'}{' '}
               <RemainingTime expiryDate={item.expiryDate ? item.expiryDate.toString() : ''}/>
             </Text>
+            </TouchableOpacity>
           </View>
         )}
       />

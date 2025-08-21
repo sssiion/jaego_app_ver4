@@ -12,7 +12,9 @@ export default function BatchEditScreen({ route, navigation }) {
     // 실제 서비스라면 이 부분에서 API 호출로 변경사항 저장
     // 여기서는 예시로 이전 화면으로 이동
     setBatch(Number(batch.id),parseCustomDate(expiry),Number(quantity)).catch(console.error);
+    navigation.replace('BatchEdit',{ batch: route });
     navigation.goBack();
+
 
   };
 
@@ -45,7 +47,7 @@ export default function BatchEditScreen({ route, navigation }) {
         style={styles.input}
         value={expiry}
         onChangeText={setExpiry}
-        placeholder="mm-dd-TT-tt"
+        placeholder="08/20. 09:00 > 08200900 (시간 4자리 선택)"
       />
       <Text style={styles.label}>수량</Text>
       <TextInput

@@ -1,45 +1,36 @@
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import {getProduct} from '../routes/apiClient.js';
-// 화면상 상품 예시 데이터 (실제 API에서 category별 상품 조회해서 대체 가능)
-const mockProducts = {
-    유제품: [
-        { id: '1', name: '우유', quantity: 20, expiryDaysLeft: 3 },
-        { id: '2', name: '치즈', quantity: 5, expiryDaysLeft: 1 },
-        { id: '3', name: '요거트', quantity: 10, expiryDaysLeft: 7 },
-    ],
-    과자류: [
-        { id: '4', name: '초코칩 쿠키', quantity: 15, expiryDaysLeft: 30 },
-        { id: '5', name: '감자칩', quantity: 25, expiryDaysLeft: 25 },
-    ],
-    // 기타 카테고리 데이터도 추가 가능
-};
+
 
 export default function CategoryProductsScreen({ route, navigation }) {
     const {  category } = route.params;
-    const [categoryName, setName] = (category.category);
     const [searchText, setSearchText] = useState('');
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [product, setProduct] = useState([]);
 
 
-    useEffect(() => {
-        const products = mockProducts[categoryName] || [];
-        setFilteredProducts(products);
-    }, [categoryName]);
 
     useEffect(() => {
-        const products = mockProducts[categoryName] || [];
-        const filtered = products.filter(p => p.name.includes(searchText));
-        const sorted = filtered.sort((a, b) => a.expiryDaysLeft - b.expiryDaysLeft);
-        setFilteredProducts(sorted);
-    }, [searchText, categoryName]);
-    useEffect(() => {
-        getProduct(category.categoryId).then(setProduct).catch(console.error);
+        getProduct(category.categoryId).then(data => {
+          setProduct(data);
+          setFilteredProducts(data); // 초기값으로 전체 상품 세팅
+        })
+          .catch(console.error);
     }, [category]);
-
+  useEffect(() => {
+    if (!searchText) {
+      setFilteredProducts(product); // 검색어 없으면 전체 표시
+    } else {
+      const filtered = product.filter(item =>
+        item.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [searchText, product]);
     return (
         <View style={styles.container}>
+          <Text style={styles.topbar}>category.category</Text>
             <TextInput
                 style={styles.searchInput}
                 placeholder="상품명으로 검색"
@@ -47,7 +38,7 @@ export default function CategoryProductsScreen({ route, navigation }) {
                 onChangeText={setSearchText}
             />
             <FlatList
-                data={product}
+                data={filteredProducts}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     onPress={() => navigation.navigate("ProductDetail", { product: item })}>
@@ -65,6 +56,7 @@ export default function CategoryProductsScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  topbar: { fontSize: 22, fontWeight: 'bold', marginBottom: 6 },
     searchInput: {
         borderColor: '#ccc',
         borderWidth: 1,
