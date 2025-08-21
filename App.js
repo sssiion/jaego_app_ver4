@@ -49,6 +49,7 @@ export default function App() {
           options={{ title: '제품 상세' }}
         />
         <Stack.Screen name="BatchEdit" component={BatchEditScreen} options={{ title: '유통기한/수량 수정' }} />
+
       </Stack.Navigator>
 
 

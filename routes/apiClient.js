@@ -2,7 +2,10 @@
 const API_BASE = 'https://jaegoserverver1-production.up.railway.app/api';
 
 
-
+export async  function getnullBatch(){
+  const res = await  fetch(`${API_BASE}/batches/null`);
+  return res.json();
+}
 //카테고리 가져오기
 export async function getCategory() {
   const res = await fetch(`${API_BASE}/categories`,{
