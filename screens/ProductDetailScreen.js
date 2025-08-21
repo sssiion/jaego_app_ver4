@@ -26,16 +26,7 @@ export default function ProductDetailScreen({ route,navigation }) {
       getBatch(product.inventoryId).then(setBatches).catch(console.error);
     }, [product])
   );
-  useEffect(() => {
-    if (batches.length > 0) {
-      const sorted = [...batches].sort(
-        (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)
-      );
-      setSortedBatches(sorted);
-    } else {
-      setSortedBatches([]);
-    }
-  }, [batches]);
+
   // 카테고리 리스트 불러오기
   useEffect(() => {
     getCategory().then(data => {
@@ -97,7 +88,7 @@ export default function ProductDetailScreen({ route,navigation }) {
           <Text style={styles.header}>수량</Text>
         </View>
         <FlatList
-          data={sortedBatches}
+          data={batches}
           keyExtractor={item => item.id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => navigation.navigate('BatchEdit', { batch: item })}>

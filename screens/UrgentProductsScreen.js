@@ -1,8 +1,9 @@
 // screens/UrgentProductsScreen.js
-import React, {  useState,useEffect  } from 'react';
+import React, {  useState,useEffect ,useLayoutEffect  } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, Button, TouchableOpacity } from 'react-native';
 import RemainingTime from './RemainingTime.js';
 import { getUrgent } from '../routes/apiClient.js';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -20,6 +21,22 @@ export default function UrgentProductsScreen({navigation}) {
       })
       .catch(console.error);
   };
+
+  // useLayoutEffect를 사용하면 화면이 렌더링되기 전에 헤더가 설정되어 깜빡임이 없습니다.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      // headerRight 옵션을 사용하여 오른쪽에 컴포넌트를 추가합니다.
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('UserSetting')} // 'UserSetting' 화면으로 이동
+          style={{ marginRight: 15 }} // 아이콘과 화면 가장자리 사이의 여백
+        >
+          {/* 톱니바퀴 아이콘 */}
+          <Ionicons name="settings-outline" size={24} color="black" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]); // navigation 객체가 변경될 때만 이 효과를 다시 실행
   // 검색어가 바뀔 때 필터링
     useEffect(() => {
       if (!search) {

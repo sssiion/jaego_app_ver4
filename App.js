@@ -12,6 +12,7 @@ import CategoryProductsScreen  from './screens/CategoryProductsScreen.js';
 import ProductDetailScreen  from './screens/ProductDetailScreen.js';
 import BatchEditScreen from './screens/BatchEditScreen.js'
 import MyPager from './screens/MyPager';
+import UserSettingsScreen from './screens/UserSettingsScreen';
 
 const Stack = createStackNavigator();
 export default function App() {
@@ -48,8 +49,16 @@ export default function App() {
           component={ProductDetailScreen}
           options={{ title: '제품 상세' }}
         />
-        <Stack.Screen name="BatchEdit" component={BatchEditScreen} options={{ title: '유통기한/수량 수정' }} />
-
+        <Stack.Screen
+          name="BatchEdit"
+          component={BatchEditScreen}
+          options={{ title: '유통기한/수량 수정' }}
+        />
+        <Stack.Screen
+          name="UserSetting"
+          component={UserSettingsScreen}
+          options={{title: '사용자 설정'}}
+          />
       </Stack.Navigator>
 
 
