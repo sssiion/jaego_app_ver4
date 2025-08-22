@@ -2,24 +2,54 @@
 import React, {  useState,useEffect ,useLayoutEffect  } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, Button, TouchableOpacity } from 'react-native';
 import RemainingTime from './RemainingTime.js';
-import { getUrgent } from '../routes/apiClient.js';
+import { getUrgentByDays, getUrgentByMinutes } from '../routes/apiClient.js';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
 export default function UrgentProductsScreen({navigation}) {
-  const[products, setProducts] = useState([]);
+  const[products, setProducts] = useState();
   const [search, setSearch] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [days, setDays] = useState('7');
+  const [filteredProducts, setFilteredProducts] = useState();
 
+  const [alertType, setAlertType] = useState('유통'); // "유통" or "소비"
+  const [timeValue, setTimeValue] = useState('7'); // 일 or 분 단위 입력값
+  // 화면 헤더에 설정 아이콘 추가
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('UserSetting')}
+          style={{ marginRight: 15 }}
+        >
+          <Ionicons name="settings" size={24} color="black" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+  // 임박상품 조회 (일 or 분 기준 선택에 따라 호출 API 분기)
   const fetchUrgent = () => {
-    getUrgent(Number(days))
-      .then(data => {
-        setProducts(data);
-        setFilteredProducts(data);
-      })
-      .catch(console.error);
+    const numericValue = Number(timeValue);
+    if (isNaN(numericValue) || numericValue <= 0) {
+      alert(`${alertType === '유통' ? '일' : '분'} 단위 올바른 숫자를 입력하세요.`);
+      return;
+    }
+
+    if (alertType === '유통') {
+      getUrgentByDays(Number(numericValue))
+        .then(data => {
+          setProducts(data);
+          setFilteredProducts(data);
+        })
+        .catch(console.error);
+    } else {
+      getUrgentByMinutes(Number(numericValue))
+        .then(data => {
+          setProducts(data);
+          setFilteredProducts(data);
+        })
+        .catch(console.error);
+    }
   };
 
   // useLayoutEffect를 사용하면 화면이 렌더링되기 전에 헤더가 설정되어 깜빡임이 없습니다.
@@ -57,13 +87,27 @@ export default function UrgentProductsScreen({navigation}) {
         value={search}
         onChangeText={setSearch}
       />
-      {/* 임박일수 입력 */}
+      {/* 유통/소비 토글 탭 */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, alertType === '유통' && styles.tabButtonSelected]}
+          onPress={() => setAlertType('유통')}
+        >
+          <Text style={alertType === '유통' ? styles.tabTextSelected : styles.tabText}>유통 (일 단위)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, alertType === '소비' && styles.tabButtonSelected]}
+          onPress={() => setAlertType('소비')}
+        >
+          <Text style={alertType === '소비' ? styles.tabTextSelected : styles.tabText}>소비 (분 단위)</Text>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={styles.input}
-        placeholder="임박 일수 입력"
+        placeholder={alertType === '유통' ? "임박 일수 입력" : "임박 분수 입력"}
         keyboardType="numeric"
-        value={days}
-        onChangeText={setDays}
+        value={timeValue}
+        onChangeText={setTimeValue}
       />
       {/* 검색 버튼 */}
       <Button title="검색" onPress={fetchUrgent} />
@@ -94,5 +138,14 @@ const styles = StyleSheet.create({
   input: { height: 40, borderColor: '#CED', borderWidth: 1, marginBottom: 10, paddingHorizontal: 8, borderRadius: 6 },
   itemRow: { marginBottom: 14 },
   itemName: { fontSize: 16, fontWeight: 'bold' },
-  itemDetail: { fontSize: 14, color: '#666' }
+  itemDetail: { fontSize: 14, color: '#666' },
+  tabContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
+  tabButton: {
+    paddingVertical: 8, paddingHorizontal: 20,
+    borderRadius: 12, borderWidth: 1,
+    borderColor: '#007AFF', marginHorizontal: 8,
+  },
+  tabButtonSelected: { backgroundColor: '#007AFF' },
+  tabText: { color: '#007AFF', fontWeight: 'bold' },
+  tabTextSelected: { color: 'white', fontWeight: 'bold' },
 });

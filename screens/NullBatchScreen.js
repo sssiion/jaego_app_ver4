@@ -14,20 +14,22 @@ export default function NullBatchScreen({ navigation}){
       setFilteredProducts(data); // 초기값으로 전체 상품 세팅
     })
       .catch(console.error);
-  }, [product]);
+  }, []);
   useEffect(() => {
     if (!searchText) {
       setFilteredProducts(product); // 검색어 없으면 전체 표시
     } else {
-      const filtered = product.filter(item =>
-        item.name.toLowerCase().includes(searchText.toLowerCase())
-      );
+      const filtered = product.filter(item =>{
+        const itemName = item.inventoryName || item.name || '';
+        return itemName.toLowerCase().includes(searchText.toLowerCase());
+      });
       setFilteredProducts(filtered);
     }
   }, [searchText, product]);
 
   return(
       <View style={styles.container}>
+
         <Text style={styles.topbar}>Null 배치</Text>
         <TextInput
           style={styles.searchInput}

@@ -86,3 +86,13 @@ export async function updateUserSettings(userId, settingsDto) {
   }
   return res.json(); // 성공 시 OperationResult 같은 응답 본문을 파싱
 }
+// 일단위
+export  async function getUrgentByMinutes(minute){
+  const res = await fetch(`${API_BASE}/batches/expiring/con?minutes=${minute}`);
+  return res.json();
+}
+//분 단위
+export  async function getUrgentByDays(days){
+  const res = await fetch(`${API_BASE}/batches/expiring/dis?days=${days}`);
+  return res.json();
+}

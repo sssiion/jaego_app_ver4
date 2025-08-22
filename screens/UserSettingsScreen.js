@@ -1,25 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Switch, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  FlatList, Pressable,
+} from 'react-native';
 import Slider from '@react-native-community/slider'; // 슬라이더 컴포넌트 임포트
 import { getUserSettings, updateUserSettings } from '../routes/apiClient.js';
 
 // 실제 앱에서는 로그인된 사용자 ID를 가져와야 합니다. 여기서는 예시로 1L을 사용합니다.
-const MOCK_USER_ID = 1;
-
+const MOCK_USER_ID = 1234;
+const daysList = Array.from({ length: 7 }, (_, i) => i + 1);
+const minutesList = [10, 30, 60]; // 3개 선택지로 변경
 export default function UserSettingsScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true); // 로딩 상태
+  const [alertType, setAlertType] = useState('소비');
+  const [alertThreshold, setAlertThreshold] = useState(3); // 일 단위
+  const [alertThresholdMinutes, setAlertThresholdMinutes] = useState(30); // 분
   const [settings, setSettings] = useState({
     enableExpiryAlerts: true,
+    alertType: '소비',
     alertThreshold: 7,
+    alertThresholdMinutes: 30,
     enableLowStockAlerts: true,
     lowStockThreshold: 5,
     theme: 'LIGHT',
   });
-
+  const onChangeAlertType = (type) => {
+    setAlertType(type);
+  };
   // 화면이 처음 로드될 때 사용자 설정을 불러옵니다.
   useEffect(() => {
     fetchSettings();
   }, []);
+
 
   // 서버에서 설정을 불러오는 함수
   const fetchSettings = async () => {
@@ -74,30 +93,62 @@ export default function UserSettingsScreen({ navigation }) {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>사용자 설정</Text>
 
-      {/* 유통기한 알림 설정 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>유통기한/소비기한 알림</Text>
-        <View style={styles.settingRow}>
-          <Text style={styles.label}>알림 받기</Text>
-          <Switch
-            value={settings.enableExpiryAlerts}
-            onValueChange={(value) => setSettings(prev => ({ ...prev, enableExpiryAlerts: value }))}
+      {/* 유통/소비 탭 선택 */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, alertType === '유통' && styles.tabButtonSelected]}
+          onPress={() => onChangeAlertType('유통')}
+        >
+          <Text style={alertType === '유통' ? styles.tabTextSelected : styles.tabText}>유통</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, alertType === '소비' && styles.tabButtonSelected]}
+          onPress={() => onChangeAlertType('소비')}
+        >
+          <Text style={alertType === '소비' ? styles.tabTextSelected : styles.tabText}>소비</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 유통 알림: 일 단위 선택 (수직 스크롤) */}
+      {alertType === '유통' && (
+        <View style={[styles.section, { height: 200 }]}>
+          <Text style={styles.sectionTitle}>알림 시점 (일 단위)</Text>
+          <FlatList
+            data={daysList}
+            keyExtractor={(item) => item.toString()}
+            renderItem={({ item }) => (
+              <Pressable onPress={() => setAlertThreshold(item)}>
+                <View style={[styles.dayItem, alertThreshold === item && styles.dayItemSelected]}>
+                  <Text style={alertThreshold === item ? styles.dayTextSelected : styles.dayText}>{item}일 전</Text>
+                </View>
+              </Pressable>
+            )}
+            showsVerticalScrollIndicator={true}
           />
         </View>
-        {settings.enableExpiryAlerts && (
-          <View style={styles.settingRow}>
-            <Text style={styles.label}>알림 시점: {settings.alertThreshold}일 전</Text>
-            <Slider
-              style={{ width: '60%' }}
-              minimumValue={1}
-              maximumValue={30}
-              step={1}
-              value={settings.alertThreshold}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, alertThreshold: value }))}
-            />
+      )}
+
+      {/* 소비 알림: 분 단위 선택 (가로 배치) */}
+      {alertType === '소비' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>알림 시점 (분 단위)</Text>
+          <View style={styles.minutesContainer}>
+            {minutesList.map((item) => (
+              <Pressable
+                key={item}
+                onPress={() => setAlertThresholdMinutes(item)}
+                style={styles.minuteButtonContainer}
+              >
+                <View style={[styles.minuteItem, alertThresholdMinutes === item && styles.minuteItemSelected]}>
+                  <Text style={alertThresholdMinutes === item ? styles.minuteTextSelected : styles.minuteText}>
+                    {item}분 전
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
           </View>
-        )}
-      </View>
+        </View>
+      )}
 
       {/* 부족 재고 알림 설정 */}
       <View style={styles.section}>
@@ -147,6 +198,7 @@ export default function UserSettingsScreen({ navigation }) {
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveButtonText}>저장하기</Text>
       </TouchableOpacity>
+
     </ScrollView>
   );
 }
@@ -174,14 +226,27 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 20,
     elevation: 2,
+    height: 110,  // 예시 높이 추가
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 15,
+  sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10 },
+  itemContainer: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 10,
+    borderBottomColor: '#cccccc',
+  },
+  itemText: {
+    fontSize: 18,
+    color: '#007AFF',
+  },
+  selectedItemText: {
+    color: 'white',
+    fontWeight: 'bold',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
   settingRow: {
     flexDirection: 'row',
@@ -227,5 +292,59 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  tabContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20 },
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    marginHorizontal: 10,
+  },
+  tabButtonSelected: { backgroundColor: '#007AFF' },
+  tabText: { color: '#007AFF', fontWeight: 'bold' },
+  tabTextSelected: { color: 'white', fontWeight: 'bold' },
+
+  dayItem: {
+    borderWidth: 1,
+    borderColor: 'white',
+    borderRadius: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    marginHorizontal: 5,
+  },
+  dayItemSelected: { backgroundColor: '#007AFF' },
+  dayText: { color: '#007AFF' },
+  dayTextSelected: { color: 'white' },
+
+  // 분 단위 가로 배치 스타일 추가
+  minutesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  minuteButtonContainer: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  minuteItem: {
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    alignItems: 'center',
+  },
+  minuteItemSelected: {
+    backgroundColor: '#007AFF'
+  },
+  minuteText: {
+    color: '#007AFF',
+    fontSize: 14,
+  },
+  minuteTextSelected: {
+    color: 'white',
+    fontSize: 14,
   },
 });
